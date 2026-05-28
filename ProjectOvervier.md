@@ -43,7 +43,73 @@ The Board focuses on legal compliance (FERPA), student privacy, and organization
 
 ---
 
-## 4. Initial Development Milestone
+## 4. Project Structure
+
+The backend follows a layered layout: routers handle HTTP only, Pydantic schemas validate requests and responses, services enforce business rules, and repositories perform async database access via SQLAlchemy.
+
+```
+University-Course-Grade-Management/
+├── app/
+│   ├── main.py                 # FastAPI app, lifespan, router registration
+│   ├── core/
+│   │   ├── config.py           # Environment settings (pydantic-settings)
+│   │   ├── security.py         # Password hashing, JWT helpers
+│   │   ├── exceptions.py       # Global exception handlers
+│   │   └── logging.py          # Structured logging (no PII)
+│   ├── db/
+│   │   ├── session.py          # Async database session (Depends)
+│   │   └── base.py             # SQLAlchemy declarative base
+│   ├── models/                 # SQLAlchemy ORM tables
+│   │   ├── student.py
+│   │   ├── course.py
+│   │   ├── enrollment.py
+│   │   └── grade_history.py    # Phase 2: grade audit trail
+│   ├── schemas/                # Pydantic models (Base, Create, Read, Public/Private)
+│   │   ├── student.py
+│   │   ├── course.py
+│   │   └── enrollment.py
+│   ├── api/
+│   │   └── v1/
+│   │       ├── router.py       # Aggregates versioned routes
+│   │       ├── students.py
+│   │       ├── courses.py
+│   │       └── enrollments.py
+│   ├── services/               # Business rules (credit caps, enrollment logic)
+│   │   ├── student_service.py
+│   │   ├── course_service.py
+│   │   └── enrollment_service.py
+│   └── repositories/           # Async DB queries (no Pydantic here)
+│       ├── student_repository.py
+│       ├── course_repository.py
+│       └── enrollment_repository.py
+├── alembic/                    # Database migrations
+│   └── versions/
+├── tests/
+│   ├── unit/
+│   │   ├── test_schemas.py     # Milestone 1: validation coverage
+│   │   └── test_services.py
+│   └── integration/
+│       └── test_api.py
+├── pyproject.toml              # Dependencies and tooling
+├── docker-compose.yml          # Local PostgreSQL
+├── ProjectOvervier.md
+└── README.md
+```
+
+### Layer responsibilities
+
+| Layer | Path | Responsibility |
+|-------|------|----------------|
+| API | `app/api/v1/` | HTTP routes, `response_model`, `Depends` for auth and DB |
+| Schemas | `app/schemas/` | Inbound/outbound validation; public vs private response models |
+| Services | `app/services/` | Academic rules (20-credit cap, grade bounds, enrollment checks) |
+| Repositories | `app/repositories/` | Async SQLAlchemy queries scoped by role |
+| Models | `app/models/` | Database table definitions (ORM) |
+| Core | `app/core/` | Config, security, shared error handling |
+
+---
+
+## 5. Initial Development Milestone
 **Task:** Define the initial Pydantic models for `Student`, `Course`, and `Enrollment`.
 * **Objective:** Achieve 100% test coverage on data validation before writing database logic.
-* **Deliverable:** A `schemas.py` file containing the `Base`, `Create`, and `Read` variations for each entity.
+* **Deliverable:** Schema modules under `app/schemas/` (`student.py`, `course.py`, `enrollment.py`) with `Base`, `Create`, and `Read` variations for each entity (plus public/private variants per Section 3).
