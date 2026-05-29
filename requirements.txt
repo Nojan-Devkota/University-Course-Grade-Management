@@ -8,8 +8,9 @@ pydantic-settings==2.14.1
 email-validator==2.3.0
 python-multipart==0.0.29
 
-# Database (ORM)
+# Database (ORM + async driver)
 sqlalchemy==2.0.50
+aiosqlite==0.22.1
 
 # Testing
 pytest==9.0.3
