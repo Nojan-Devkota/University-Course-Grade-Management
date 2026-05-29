@@ -3,17 +3,22 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from api.v1.router import api_router
+from core.config import settings
 from core.exceptions import register_exception_handlers
+from core.logging import configure_logging, get_logger
 from db.session import engine
 from models import Base
+
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Dev convenience: create tables on startup. In production this is replaced
-    # by Alembic migrations.
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    configure_logging()
+    if not settings.testing:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables ready.")
     yield
     await engine.dispose()
 
