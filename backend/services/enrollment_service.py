@@ -3,21 +3,33 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.exceptions import BusinessRuleViolation, ConflictError, NotFoundError
+from core.auth import TokenUser
+from core.exceptions import BusinessRuleViolation, ConflictError, ForbiddenError, NotFoundError
 from models.enrollment import Enrollment
 from repositories import (
     course_repository,
     enrollment_repository as repo,
+    grade_history_repository,
     student_repository,
 )
 from schemas.enrollment import EnrollmentCreate, EnrollmentGradeUpdate, EnrollmentStatus
 
-# University rule: a student may not exceed 20 credits in a single term.
 MAX_CREDITS_PER_TERM = 20
 
 
-async def enroll_student(db: AsyncSession, payload: EnrollmentCreate) -> Enrollment:
-    """Enroll a student in a course, enforcing every academic precondition."""
+def _ensure_can_manage_student(actor: TokenUser, student_id: UUID) -> None:
+    if actor.role == "staff":
+        return
+    if actor.role == "student" and actor.id == student_id:
+        return
+    raise ForbiddenError("You may only act on your own student record.")
+
+
+async def enroll_student(
+    db: AsyncSession, payload: EnrollmentCreate, actor: TokenUser
+) -> Enrollment:
+    _ensure_can_manage_student(actor, payload.student_id)
+
     student = await student_repository.get_student(db, payload.student_id)
     if student is None:
         raise NotFoundError(f"Student {payload.student_id} not found.")
@@ -32,7 +44,6 @@ async def enroll_student(db: AsyncSession, payload: EnrollmentCreate) -> Enrollm
     if existing:
         raise ConflictError("Student is already enrolled in this course.")
 
-    # Enforce the 20-credit cap for the course's specific term.
     current_credits = await repo.get_active_credits_for_term(
         db, payload.student_id, course.semester, course.year
     )
@@ -59,21 +70,51 @@ async def get_enrollment(db: AsyncSession, enrollment_id: UUID) -> Enrollment:
 
 
 async def list_for_student(
-    db: AsyncSession, student_id: UUID
+    db: AsyncSession, student_id: UUID, actor: TokenUser
 ) -> Sequence[Enrollment]:
+    _ensure_can_manage_student(actor, student_id)
     return await repo.list_by_student(db, student_id)
 
 
 async def set_grade(
-    db: AsyncSession, enrollment_id: UUID, payload: EnrollmentGradeUpdate
+    db: AsyncSession,
+    enrollment_id: UUID,
+    payload: EnrollmentGradeUpdate,
+    actor: TokenUser,
 ) -> Enrollment:
-    """Record a grade. The 0.0-4.0 range is already enforced by the schema."""
+    if actor.role != "staff":
+        raise ForbiddenError("Only staff may assign grades.")
+
     enrollment = await get_enrollment(db, enrollment_id)
-    return await repo.update_enrollment(db, enrollment, {"grade": payload.grade})
+    old_grade = enrollment.grade
+    enrollment.grade = payload.grade
+
+    await grade_history_repository.record_grade_change(
+        db,
+        enrollment_id=enrollment_id,
+        changed_by_id=actor.id,
+        changed_by_role=actor.role,
+        old_grade=old_grade,
+        new_grade=payload.grade,
+    )
+    await db.commit()
+    await db.refresh(enrollment)
+    return enrollment
 
 
 async def update_status(
-    db: AsyncSession, enrollment_id: UUID, status: EnrollmentStatus
+    db: AsyncSession,
+    enrollment_id: UUID,
+    status: EnrollmentStatus,
+    actor: TokenUser,
 ) -> Enrollment:
+    if actor.role != "staff":
+        raise ForbiddenError("Only staff may update enrollment status.")
+
     enrollment = await get_enrollment(db, enrollment_id)
     return await repo.update_enrollment(db, enrollment, {"status": status})
+
+
+async def get_grade_history(db: AsyncSession, enrollment_id: UUID):
+    await get_enrollment(db, enrollment_id)
+    return await grade_history_repository.list_for_enrollment(db, enrollment_id)
