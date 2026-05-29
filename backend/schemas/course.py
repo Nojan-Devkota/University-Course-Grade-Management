@@ -15,7 +15,7 @@ class CourseBase(BaseModel):
         str,
         Field(
             pattern=r"^[A-Z]{2,3}\d{3,4}$",
-            description="Course code must be in the format of 3 uppercase letters followed by 3 digits",
+            description="Course code must be in the format of 2 or 3 uppercase letters followed by 3 or 4 digits",
             example="CS3303",
         ),
     ]
