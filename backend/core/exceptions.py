@@ -22,12 +22,16 @@ class BusinessRuleViolation(DomainError):
     """A university academic rule was violated, e.g. the credit cap (maps to 422)."""
 
 
-def register_exception_handlers(app) -> None:
-    """Translate domain errors into HTTP responses at the app boundary.
+class UnauthorizedError(DomainError):
+    """Missing or invalid credentials (maps to HTTP 401)."""
 
-    Keeping this mapping in one place means routes and services never need to
-    know about HTTP status codes.
-    """
+
+class ForbiddenError(DomainError):
+    """Authenticated but not permitted (maps to HTTP 403)."""
+
+
+def register_exception_handlers(app) -> None:
+    """Translate domain errors into HTTP responses at the app boundary."""
     from fastapi import Request
     from fastapi.responses import JSONResponse
 
@@ -35,6 +39,8 @@ def register_exception_handlers(app) -> None:
         NotFoundError: 404,
         ConflictError: 409,
         BusinessRuleViolation: 422,
+        UnauthorizedError: 401,
+        ForbiddenError: 403,
     }
 
     async def handle_domain_error(request: "Request", exc: DomainError) -> "JSONResponse":
