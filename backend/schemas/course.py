@@ -16,7 +16,7 @@ class CourseBase(BaseModel):
         Field(
             pattern=r"^[A-Z]{2,3}\d{3,4}$",
             description="Course code must be in the format of 2 or 3 uppercase letters followed by 3 or 4 digits",
-            example="CS3303",
+            examples=["CS3303"],
         ),
     ]
 
@@ -26,14 +26,14 @@ class CourseBase(BaseModel):
             min_length=1,
             max_length=500,
             description="Course title must be between 1 and 500 characters",
-            example="Introduction to Computer Science",
+            examples=["Introduction to Computer Science"],
         ),
     ]
 
     credits: Annotated[
         int,
         Field(
-            ge=0, le=6, description="Course credits must be between 0 and 6", example=3
+            ge=0, le=6, description="Course credits must be between 0 and 6", examples=[3]
         ),
     ]
 
@@ -43,7 +43,7 @@ class CourseBase(BaseModel):
             min_length=1,
             max_length=300,
             description="Department must be between 1 and 300 characters",
-            example="Computer Science",
+            examples=["Computer Science"],
         ),
     ]
 
@@ -51,7 +51,7 @@ class CourseBase(BaseModel):
         Semester,
         Field(
             description="Semester must be one of the following: Spring, Summer, Fall",
-            example=Semester.SPRING,
+            examples=[Semester.SPRING],
         ),
     ]
 
@@ -61,7 +61,7 @@ class CourseBase(BaseModel):
             ge=2000,
             le=2100,
             description="Year must be between 2000 and 2100",
-            example=2026,
+            examples=[2026],
         ),
     ]
     
@@ -75,7 +75,7 @@ class CourseRead(CourseBase):
         UUID,
         Field(
             description="Course ID",
-            example="123e4567-e89b-12d3-a456-426614174000",
+            examples=["123e4567-e89b-12d3-a456-426614174000"],
         )
     ]
     
@@ -83,7 +83,7 @@ class CourseRead(CourseBase):
         datetime,
         Field(
             description="Creation date and time",
-            example="2026-05-28T12:00:00Z",
+            examples=["2026-05-28T12:00:00Z"],
         )
     ]
     
@@ -91,6 +91,6 @@ class CourseRead(CourseBase):
         datetime,
         Field(
             description="Last update date and time",
-            example="2026-05-28T12:00:00Z",
+            examples=["2026-05-28T12:00:00Z"],
         )
     ]
