@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Annotated
 from enum import Enum
-
+from uuid import UUID
+from datetime import datetime
 
 class Semester(str, Enum):
     SPRING = "Spring"
@@ -62,4 +63,30 @@ class CourseBase(BaseModel):
             description="Year must be between 2000 and 2100",
             example=2026,
         ),
+    ]
+    
+    
+class CourseRead(CourseBase):
+    id: Annotated[
+        UUID,
+        Field(
+            description="Course ID",
+            example="123e4567-e89b-12d3-a456-426614174000",
+        )
+    ]
+    
+    created_at: Annotated[
+        datetime,
+        Field(
+            description="Creation date and time",
+            example="2026-05-28T12:00:00Z",
+        )
+    ]
+    
+    updated_at: Annotated[
+        datetime,
+        Field(
+            description="Last update date and time",
+            example="2026-05-28T12:00:00Z",
+        )
     ]
