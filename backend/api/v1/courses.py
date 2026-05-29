@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.auth import TokenUser, require_staff
 from db.session import get_session
 from schemas.course import CourseCreate, CourseRead, Semester
 from services import course_service
@@ -12,7 +13,9 @@ router = APIRouter(prefix="/courses", tags=["courses"])
 
 @router.post("", response_model=CourseRead, status_code=status.HTTP_201_CREATED)
 async def create_course(
-    payload: CourseCreate, db: AsyncSession = Depends(get_session)
+    payload: CourseCreate,
+    db: AsyncSession = Depends(get_session),
+    _: TokenUser = Depends(require_staff),
 ):
     return await course_service.create_course(db, payload)
 
@@ -42,5 +45,9 @@ async def get_course(course_id: UUID, db: AsyncSession = Depends(get_session)):
 
 
 @router.delete("/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_course(course_id: UUID, db: AsyncSession = Depends(get_session)):
+async def delete_course(
+    course_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    _: TokenUser = Depends(require_staff),
+):
     await course_service.delete_course(db, course_id)
