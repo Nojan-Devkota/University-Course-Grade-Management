@@ -65,6 +65,8 @@ class CourseBase(BaseModel):
         ),
     ]
     
+class CourseCreate(CourseBase):
+    pass
     
 class CourseRead(CourseBase):
     id: Annotated[
