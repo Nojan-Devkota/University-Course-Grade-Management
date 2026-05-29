@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated
 from enum import Enum
 from uuid import UUID
@@ -69,6 +69,8 @@ class CourseCreate(CourseBase):
     pass
     
 class CourseRead(CourseBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: Annotated[
         UUID,
         Field(
