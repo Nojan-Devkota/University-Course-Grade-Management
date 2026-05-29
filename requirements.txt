@@ -8,6 +8,9 @@ pydantic-settings==2.14.1
 email-validator==2.3.0
 python-multipart==0.0.29
 
+# Database (ORM)
+sqlalchemy==2.0.50
+
 # Testing
 pytest==9.0.3
 httpx==0.28.1
