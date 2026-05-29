@@ -11,7 +11,7 @@ class StudentBase(BaseModel):
             min_length=1,
             max_length=100,
             description="First name must be between 1 and 100 characters",
-            example="John",
+            examples=["John"],
         ),
     ]
 
@@ -21,7 +21,7 @@ class StudentBase(BaseModel):
             min_length=1,
             max_length=100,
             description="Last name must be between 1 and 100 characters",
-            example="Doe",
+            examples=["Doe"],
         ),
     ]
 
@@ -30,7 +30,7 @@ class StudentBase(BaseModel):
         Field(
             pattern=r"^AO\d{7}$",
             description="Student number must be in the format of AO followed by 7 digits",
-            example="AO1234567",
+            examples=["AO1234567"],
         ),
     ]
 
@@ -40,7 +40,7 @@ class StudentCreate(StudentBase):
         EmailStr,
         Field(
             description="Email must be a valid email address",
-            example="john.doe@example.com",
+            examples=["john.doe@example.com"],
         ),
     ]
 
@@ -58,7 +58,7 @@ class StudentCreate(StudentBase):
             min_length=1,
             max_length=300,
             description="Home address must be between 1 and 300 characters",
-            example="123 Main St, Anytown, USA",
+            examples=["123 Main St, Anytown, USA"],
             default=None,
         ),
     ]
@@ -71,7 +71,7 @@ class StudentRead(StudentBase):
         UUID,
         Field(
             description="Student ID",
-            example="123e4567-e89b-12d3-a456-426614174000",
+            examples=["123e4567-e89b-12d3-a456-426614174000"],
         ),
     ]
 
@@ -79,14 +79,14 @@ class StudentRead(StudentBase):
         datetime,
         Field(
             description="Creation date and time",
-            example="2026-05-28T12:00:00Z",
+            examples=["2026-05-28T12:00:00Z"],
         ),
     ]
     updated_at: Annotated[
         datetime,
         Field(
             description="Last update date and time",
-            example="2026-05-28T12:00:00Z",
+            examples=["2026-05-28T12:00:00Z"],
         ),
     ]
 
@@ -100,7 +100,7 @@ class StudentReadPrivate(StudentRead):
         EmailStr,
         Field(
             description="Email address",
-            example="john.doe@example.com",
+            examples=["john.doe@example.com"],
         ),
     ]
 
@@ -110,7 +110,7 @@ class StudentReadPrivate(StudentRead):
             min_length=1,
             max_length=300,
             description="Home address must be between 1 and 300 characters",
-            example="123 Main St, Anytown, USA",
+            examples=["123 Main St, Anytown, USA"],
             default=None,
         ),
     ]
