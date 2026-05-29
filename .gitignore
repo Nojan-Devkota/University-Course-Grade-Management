@@ -217,11 +217,36 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Custom
+# Custom — project-specific
 ProjectOvervier.md
+
+# Local environment (never commit secrets; keep .env.example as a template)
+.env
+.env.*
+!.env.example
 
 # Local SQLite database files
 app.db
 *.db
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Pytest temporary cache directories
+pytest-cache-files-*/
+
+# Git filter-branch backup (if left at repo root after history rewrite)
+.git-rewrite/
