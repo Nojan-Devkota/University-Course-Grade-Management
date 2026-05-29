@@ -86,7 +86,7 @@ University-Course-Grade-Management/
 │   └── versions/
 ├── tests/
 │   ├── unit/
-│   │   ├── test_schemas.py     # Milestone 1: validation coverage
+│   │   ├── test_course_schema.py  # Milestone 1: course schema validation
 │   │   └── test_services.py
 │   └── integration/
 │       └── test_api.py
