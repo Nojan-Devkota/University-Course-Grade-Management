@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, SecretStr
 from datetime import datetime
 from typing import Annotated, Optional
 from uuid import UUID
@@ -65,6 +65,8 @@ class StudentCreate(StudentBase):
 
 
 class StudentRead(StudentBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: Annotated[
         UUID,
         Field(
