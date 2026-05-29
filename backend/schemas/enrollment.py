@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Annotated, Optional
 from enum import Enum
 from uuid import UUID
@@ -51,6 +51,8 @@ class EnrollmentCreate(EnrollmentBase):
 
 
 class EnrollmentRead(EnrollmentBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: Annotated[
         UUID,
         Field(
