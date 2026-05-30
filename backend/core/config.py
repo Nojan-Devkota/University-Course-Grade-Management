@@ -15,6 +15,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
 
     database_url: str = "sqlite+aiosqlite:///./app.db"
+
+    @field_validator("database_url")
+    @classmethod
+    def format_database_url(cls, v: str) -> str:
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     sql_echo: bool = True
     testing: bool = False
 
