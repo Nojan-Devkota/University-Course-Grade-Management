@@ -145,9 +145,9 @@ class TestStudentCreatePasswordValidation:
 
 
 class TestStudentCreateHomeAddressValidation:
-    def test_rejects_empty_home_address_when_provided(self):
-        with pytest.raises(ValidationError):
-            StudentCreate(**valid_student_create_kwargs(home_address=""))
+    def test_treats_empty_home_address_as_none(self):
+        student = StudentCreate(**valid_student_create_kwargs(home_address=""))
+        assert student.home_address is None
 
     def test_rejects_home_address_over_300_characters(self):
         with pytest.raises(ValidationError):
