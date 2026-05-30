@@ -1,264 +1,224 @@
-# University Course & Grade Management API
+# 🎓 UniGrade — University Course & Grade Management System
 
-Production-oriented FastAPI backend for managing students, course offerings, enrollments, and grades. Built with strict Pydantic validation, async SQLAlchemy, JWT authentication, layered architecture, and FERPA-aware public/private response schemas.
+A full-stack, enterprise-grade academic management system designed to streamline course catalogs, student enrollments, grading, and academic analytics. Built with a premium Neo-Brutalist design aesthetic, rigid role-based access control (RBAC), and a robust FastAPI + Next.js decoupled architecture.
 
-## Features
+---
 
-- **Validated API contracts** — dedicated Pydantic schemas for every request and response
-- **Layered architecture** — routers, services, repositories, and ORM models kept separate
-- **Async I/O** — async SQLAlchemy sessions for concurrent request handling
-- **Role-based access** — student and staff JWT flows with route-level authorization
-- **Academic business rules** — GPA scale (0.0–4.0), 20-credit cap per semester, unique course offerings
-- **Grade audit trail** — grade changes recorded with actor and timestamp
-- **Privacy by design** — sensitive student fields excluded from public responses
+## 🔗 Live Deployments
 
-## Tech stack
+*   **Frontend App**: [https://university-grade-frontend.onrender.com](https://university-grade-frontend.onrender.com) (Deployed on Render Web Service)
+*   **Backend API**: [https://university-course-grade-management.onrender.com](https://university-course-grade-management.onrender.com) (Deployed on Render Web Service)
+*   **Database**: PostgreSQL (Hosted on Render Database)
 
-| Layer | Technology |
-|-------|------------|
-| API | FastAPI, Uvicorn |
-| Validation | Pydantic v2 |
-| Database | SQLAlchemy 2.0 (async), SQLite (dev) / PostgreSQL (production) |
-| Auth | JWT (PyJWT), PBKDF2 password hashing |
-| Testing | pytest, httpx |
+---
 
-## Requirements
+## 🎨 Design System & Aesthetic (Neo-Brutalism)
 
-- Python 3.11+
-- pip and a virtual environment
+UniGrade breaks away from generic, boring enterprise layouts by employing a high-end **Neo-Brutalist** aesthetic. 
+*   **High Contrast Geometry**: Distinct card layers using thick black borders (`border-2 border-zinc-950`) and retro-modern hard shadows (`shadow-[4px_4px_0px_0px_rgba(24,24,27,1)]`).
+*   **Vibrant Color Palettes**: Tailored HSL gradients combining emerald, violet, pink, and amber tones on top of sleek dark/light borders.
+*   **Micro-Animations**: Powered by **Framer Motion** for smooth, playful transitions, spring-loaded buttons, card hover lift-offs, and dynamic sidebar slides.
+*   **Typography**: Clean, modern typography using the **Inter** font family for maximum legibility.
 
-## Quick start
+---
 
-### 1. Clone and install
+## 🏗️ Architecture Overview
 
-```powershell
-git clone https://github.com/Nojan-Devkota/University-Course-Grade-Management.git
-cd University-Course-Grade-Management
+The project is structured as a decoupled monorepo containing a Python backend and a TypeScript/Next.js frontend:
 
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+```mermaid
+graph LR
+    User[Client Browser] <-->|Next.js Frontend | FE[Render Web Service]
+    FE <-->|Secure JWT / HTTPS| BE[FastAPI Backend - Render]
+    BE <-->|Async PostgreSQL / SQL| DB[(PostgreSQL Database)]
 ```
 
-### 2. Configure environment
+---
 
-Copy the example env file and edit it:
+## 🌟 Key Features
 
-```powershell
-Copy-Item .env.example .env
-```
+### Frontend (Next.js App)
+*   **Student Portal**: Displays personal statistics (GPA, total credits, enrolled classes) inside interactive Neo-brutalist widgets. Student data is FERPA-compliant and segregated.
+*   **Staff Portal**: A command center featuring student registry management, course creator tools, enrollment logs, and grade editing panels.
+*   **Interactive Grade Editor**: Staff can dynamically edit student grades and view a complete historical audit trail for grade modifications.
+*   **Dynamic Search & Filtering**: Instant client-side and backend search filters for courses by department, semester, and year.
+*   **Robust Navigation**: Fully responsive Sidebar and Header system with custom active state indicators and contextual auth redirects.
 
-**Required before running in any shared or production environment:**
+### Backend (FastAPI API)
+*   **Strict Validations**: Complete data validation using Pydantic schemas for request bodies and API response mapping.
+*   **Async Operations**: Async database operations utilizing SQLAlchemy 2.0 and `asyncpg` for high concurrency.
+*   **Role-Based Security**: Decoupled JWT flows for students and staff with custom dependency-based route permission gates.
+*   **Audit Logging**: Automatic logging of grade modifications, recording the changing actor, old grade, new grade, and exact timestamps.
+*   **Automatic CORS Regex**: Allows dynamic Vercel previews and Render environments to interact securely with the API.
 
-| Variable | What to set |
-|----------|-------------|
-| `JWT_SECRET_KEY` | A long random string (32+ characters). Generate one with: `python -c "import secrets; print(secrets.token_hex(32))"` |
-| `STAFF_PASSWORD` | A strong password (not the default) |
+---
 
-Other variables have sensible defaults for local development. See [Environment variables](#environment-variables) below.
+## 🛠️ Tech Stack
 
-> **Note:** `.env` lives in the **project root** (same folder as this README). It is gitignored and must never be committed.
+| Layer | Technologies Used |
+| :--- | :--- |
+| **Frontend Core** | Next.js 15+ (App Router), React 19, TypeScript |
+| **Styling & Motion** | Tailwind CSS v4, Framer Motion, Lucide Icons |
+| **Backend Core** | FastAPI, Uvicorn |
+| **Database ORM** | SQLAlchemy 2.0 (Async), `asyncpg` |
+| **Database engine** | PostgreSQL (Production), SQLite (Local Dev) |
+| **Authentication** | JWT (PyJWT), PBKDF2 Password Hashing |
+| **Testing Suite** | Pytest, HTTPX |
 
-### 3. Run the API
+---
 
-Start the server from the `backend` directory:
-
-```powershell
-cd backend
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
-```
-
-On first startup, tables are created automatically and `app.db` is written to `backend/app.db`.
-
-| Resource | URL |
-|----------|-----|
-| Swagger UI | http://127.0.0.1:8000/docs |
-| ReDoc | http://127.0.0.1:8000/redoc |
-| Health check | http://127.0.0.1:8000/health |
-
-## Authentication
-
-Protected routes require an `Authorization: Bearer <token>` header.
-
-### Register a student
-
-```http
-POST /api/v1/students
-Content-Type: application/json
-
-{
-  "first_name": "John",
-  "last_name": "Doe",
-  "student_number": "AO1234567",
-  "email": "john.doe@example.com",
-  "password": "securepass"
-}
-```
-
-### Student login
-
-```http
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "email": "john.doe@example.com",
-  "password": "securepass"
-}
-```
-
-Response includes `access_token` and `role: "student"`.
-
-### Staff login
-
-Uses credentials from `.env` (`STAFF_USERNAME`, `STAFF_PASSWORD`):
-
-```http
-POST /api/v1/auth/staff/login
-Content-Type: application/json
-
-{
-  "username": "admin",
-  "password": "your-staff-password"
-}
-```
-
-Response includes `access_token` and `role: "staff"`.
-
-In Swagger UI, click **Authorize** and enter: `Bearer <your-token>`
-
-## API overview
-
-Base path: `/api/v1`
-
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `GET` | `/health` | — | Liveness check |
-| `POST` | `/auth/login` | — | Student JWT |
-| `POST` | `/auth/staff/login` | — | Staff JWT |
-| `POST` | `/students` | — | Register student |
-| `GET` | `/students` | — | List students (public fields) |
-| `GET` | `/students/{id}` | Optional | Public view; private if self or staff |
-| `DELETE` | `/students/{id}` | Staff | Delete student |
-| `POST` | `/courses` | Staff | Create course offering |
-| `GET` | `/courses` | — | List courses (filter by department, semester, year) |
-| `GET` | `/courses/{id}` | — | Get course |
-| `DELETE` | `/courses/{id}` | Staff | Delete course |
-| `POST` | `/enrollments` | Student/Staff | Enroll in a course |
-| `GET` | `/enrollments/{id}` | — | Get enrollment |
-| `GET` | `/enrollments/by-student/{id}` | Student/Staff | List a student's enrollments |
-| `PATCH` | `/enrollments/{id}/grade` | Staff | Assign or update grade |
-| `PATCH` | `/enrollments/{id}/status` | Staff | Update enrollment status |
-| `GET` | `/enrollments/{id}/grade-history` | Staff | View grade change audit trail |
-
-Full request/response schemas are documented in Swagger at `/docs`.
-
-## Authorization matrix
-
-| Action | Public | Student | Staff |
-|--------|:------:|:-------:|:-----:|
-| Register student | ✓ | — | — |
-| View student (name, number) | ✓ | ✓ | ✓ |
-| View student (email, address) | — | Self | ✓ |
-| Create / delete courses | — | — | ✓ |
-| Enroll in courses | — | Self | ✓ |
-| Assign / update grades | — | — | ✓ |
-| View grade history | — | — | ✓ |
-
-## Business rules
-
-Enforced at the schema, service, and database layers:
-
-- **Course codes** — `^[A-Z]{2,3}\d{3,4}$` (e.g. `CS3303`)
-- **Student numbers** — `^AO\d{7}$` (e.g. `AO1234567`)
-- **Grades** — 0.0 to 4.0 GPA scale
-- **Credits** — 0–6 per course; max **20 credits** per student per semester
-- **Course offerings** — unique by code + semester + year
-- **Enrollments** — one enrollment per student per course offering
-- **Grade history** — every grade change records who changed it and when
-
-## Testing
-
-From the project root (with the virtual environment active):
-
-```powershell
-pytest
-```
-
-| Suite | Location | Coverage |
-|-------|----------|----------|
-| Unit | `backend/test/unit/` | Pydantic schema validation |
-| Integration | `backend/test/integration/` | Full HTTP API with in-memory DB |
-
-Integration tests set `TESTING=true` automatically and do not require a `.env` file or a real database file.
-
-```powershell
-pytest -v                          # verbose output
-pytest backend/test/integration/   # integration tests only
-```
-
-## Project structure
+## 📂 Directory Structure
 
 ```
 University-Course-Grade-Management/
-├── .env.example          # Environment template (copy to .env)
-├── requirements.txt
-├── pytest.ini
-└── backend/
-    ├── main.py           # FastAPI app entry point
-    ├── api/v1/           # HTTP routes and response_model wiring
-    ├── core/             # Config, auth, security, logging, exceptions
-    ├── db/               # Async engine, session, declarative base
-    ├── models/           # SQLAlchemy ORM tables
-    ├── repositories/     # Async database queries
-    ├── schemas/          # Pydantic request/response models
-    ├── services/         # Business rules and orchestration
-    └── test/             # Unit and integration tests
+├── backend/                  # FastAPI Backend Source
+│   ├── api/v1/               # HTTP Routers (Auth, Students, Courses, Enrollments)
+│   ├── core/                 # Config, security, logging, exceptions
+│   ├── db/                   # Async engine, session, declarative base
+│   ├── models/               # SQLAlchemy ORM schemas
+│   ├── repositories/         # Async database queries (Repository pattern)
+│   ├── schemas/              # Pydantic request/response validation schemas
+│   ├── services/             # Core business logic handlers
+│   └── test/                 # Pytest Unit & Integration tests
+├── frontend/                 # Next.js Frontend Source
+│   ├── src/
+│   │   ├── app/              # Next.js App Router (Layouts & Pages)
+│   │   ├── components/       # Custom Neo-brutalist widgets, sidebar, buttons
+│   │   └── lib/              # AuthContext, API client (api.ts), utils
+│   ├── public/               # Static assets & SVG icons
+│   ├── package.json          # Frontend dependencies & scripts
+│   └── tsconfig.json         # TypeScript configuration
+├── .gitignore                # Global gitignore configuration
+├── requirements.txt          # Python dependencies
+└── pytest.ini                # Pytest configuration
 ```
 
-## Environment variables
+---
 
-All variables are optional for local development except where noted. Loaded from `.env` at the project root or from the process environment.
+## 🚀 Local Development Setup
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DATABASE_URL` | `sqlite+aiosqlite:///./app.db` | Async database connection URL |
-| `SQL_ECHO` | `true` | Log SQL statements (`false` recommended in production) |
-| `JWT_SECRET_KEY` | `change-me-in-production` | **Change in production.** JWT signing secret |
-| `STAFF_USERNAME` | `admin` | Staff login username |
-| `STAFF_PASSWORD` | `adminpass123` | **Change in production.** Staff login password |
-| `TESTING` | `false` | Set by pytest; skips DB init on startup |
+Clone the repository to get started:
+```bash
+git clone https://github.com/Nojan-Devkota/University-Course-Grade-Management.git
+cd University-Course-Grade-Management
+```
 
-### Production database
+### 1. Backend Setup
+1. Navigate to the root directory and set up a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Create your `.env` file from the example template:
+   ```bash
+   cp .env.example .env  # On Windows: copy .env.example .env
+   ```
+4. Generate a secure `JWT_SECRET_KEY` inside `.env`:
+   ```bash
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
+5. Run the FastAPI development server:
+   ```bash
+   cd backend
+   python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+   ```
+*   **API Docs**: Visit [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for the interactive Swagger documentation.
 
-Replace `DATABASE_URL` with a PostgreSQL async URL when deploying:
+---
+
+### 2. Frontend Setup
+1. Open a new terminal and navigate to the `frontend` directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Next.js development server:
+   ```bash
+   npm run dev
+   ```
+*   **Web App**: Open [http://localhost:3000](http://localhost:3000) to view the application locally.
+
+---
+
+## 🔒 Security & Authorization Matrix
+
+UniGrade implements strict role-based access control. Public endpoints are separated from student-only views, and staff-only administrative capabilities:
+
+| API Action / Resource | Endpoint | Public | Student | Staff |
+| :--- | :--- | :---: | :---: | :---: |
+| Register Student | `POST /api/v1/students` | ✔ | — | — |
+| Student Login | `POST /api/v1/auth/login` | ✔ | — | — |
+| Staff Login | `POST /api/v1/auth/staff/login` | ✔ | — | — |
+| Course Catalog List | `GET /api/v1/courses` | ✔ | ✔ | ✔ |
+| View Student Profile | `GET /api/v1/students/{id}` | — | Self Only | ✔ |
+| Create / Delete Course | `POST / DELETE /api/v1/courses` | — | — | ✔ |
+| Enroll in a Course | `POST /api/v1/enrollments` | — | Self Only | ✔ |
+| Edit Grades / Status | `PATCH /api/v1/enrollments/{id}/grade` | — | — | ✔ |
+| View Grade Audit History | `GET /api/v1/enrollments/{id}/grade-history` | — | — | ✔ |
+
+---
+
+## 📋 Academic Business Rules
+
+The following core guidelines are programmatically enforced at the database, service, and schema layers:
+1.  **Unique Course Offerings**: Courses are unique based on `Code` + `Semester` + `Year`.
+2.  **Semester Credit Cap**: Students are limited to a maximum of **20 credits** per semester to prevent academic overload.
+3.  **Grade Constraint**: All grade averages must strictly fall within the standard **0.0 to 4.0 GPA** scale.
+4.  **Grade Audit Trails**: Any modification of grades requires staff authentication and writes a persistent entry into the Grade Change Audit table mapping the actor's ID and changing history.
+
+---
+
+## 🧪 Testing Suite
+
+Tests can be run directly from the root folder (make sure your virtual environment is active):
 
 ```bash
-DATABASE_URL=postgresql+asyncpg://user:password@host:5432/dbname
+# Run all tests
+pytest
+
+# Run tests in verbose mode
+pytest -v
+
+# Run integration API tests only
+pytest backend/test/integration/
 ```
 
-Use Alembic migrations for schema changes in production instead of relying on startup `create_all`.
+Our tests are grouped into:
+*   **Unit Tests** (`backend/test/unit/`): Schema-level structural checks.
+*   **Integration Tests** (`backend/test/integration/`): End-to-end routing validation, authentication flows, and rule enforcement using an in-memory database configuration.
 
-## Error responses
+---
 
-Domain errors from the service layer map to consistent HTTP responses:
+## 🌐 Production Deployment Configuration
 
-| Error | HTTP status |
-|-------|-------------|
-| Record not found | `404` |
-| Duplicate / conflict | `409` |
-| Business rule violation (e.g. credit cap) | `422` |
-| Missing or invalid auth | `401` |
-| Insufficient permissions | `403` |
-| Invalid request body | `422` (Pydantic validation) |
+### Render Backend (FastAPI + PostgreSQL)
+1.  Create a **PostgreSQL Database** on Render.
+2.  Create a **Web Service** pointing to your repository.
+3.  Set the **Start Command** to: `cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT`.
+4.  Configure the following Environment Variables in Render:
+    *   `DATABASE_URL`: `postgresql+asyncpg://...` (Render's internal DB connection string starting with `postgresql+asyncpg://`)
+    *   `JWT_SECRET_KEY`: *[Your Hex String]*
+    *   `STAFF_USERNAME`: *[Admin Username]*
+    *   `STAFF_PASSWORD`: *[Admin Password]*
+    *   `SQL_ECHO`: `false`
 
-## Security notes
+### Render Frontend (Next.js App)
+1.  Create a new **Web Service** on Render.
+2.  Set **Root Directory** to `frontend`.
+3.  Set **Build Command** to: `npm install && npm run build`.
+4.  Set **Start Command** to: `npm start`.
+5.  Configure the following Environment Variable in Render:
+    *   `NEXT_PUBLIC_API_URL`: `https://university-course-grade-management.onrender.com` (Your live backend URL)
 
-- Passwords are hashed with PBKDF2 before storage; plaintext passwords are never persisted
-- Public student responses exclude email, home address, and password fields
-- Structured logging avoids writing PII to logs
-- Keep `.env` out of version control; rotate `JWT_SECRET_KEY` and staff credentials for production
+---
 
-## License
+## 📄 License
 
-See repository license file if present.
+This project is licensed under the MIT License. Feel free to use and modify it for academic or personal administration purposes.
