@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Resolve .env from the project root so it loads whether uvicorn is started
@@ -23,6 +24,13 @@ class Settings(BaseSettings):
 
     staff_username: str = "admin"
     staff_password: str = "adminpass123"
+
+    @field_validator("staff_username", "staff_password", "jwt_secret_key", mode="before")
+    @classmethod
+    def strip_env_strings(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
 
 
 settings = Settings()
