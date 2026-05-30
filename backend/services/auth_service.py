@@ -1,3 +1,4 @@
+import hmac
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,10 @@ async def login_student(db: AsyncSession, email: str, password: str) -> str:
 
 
 def login_staff(username: str, password: str) -> str:
-    if username != settings.staff_username or password != settings.staff_password:
+    username = username.strip()
+    password = password.strip()
+    username_ok = hmac.compare_digest(username, settings.staff_username)
+    password_ok = hmac.compare_digest(password, settings.staff_password)
+    if not username_ok or not password_ok:
         raise UnauthorizedError("Invalid staff credentials.")
     return create_access_token(subject=STAFF_USER_ID, role="staff")
