@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, EmailStr, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, SecretStr, field_validator
 from datetime import datetime
 from typing import Annotated, Optional
 from uuid import UUID
@@ -62,6 +62,13 @@ class StudentCreate(StudentBase):
             default=None,
         ),
     ]
+
+    @field_validator("home_address", mode="before")
+    @classmethod
+    def empty_home_address_to_none(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
 
 class StudentRead(StudentBase):
